@@ -92,6 +92,3 @@ def diseases_correlated_above_threshold(sample_id, corr_df, type_df, threshold=0
     donor_ids = [sample_to_donor(sample_id) for sample_id in sample_ids]
     disease_counts = type_df.loc[donor_ids]['Diagnosis/Disease'].value_counts()
     return disease_counts / sum(disease_counts)
-
-
-
