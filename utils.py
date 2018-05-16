@@ -78,7 +78,7 @@ def get_sample_correlations(sample_id, corr_df):
         
     return corr_dict
 
-def diseases_correlated_above_threshold(sample_id, corr_df, type_df, threshold=0.87):
+def get_samples_correlated_above_threshold(sample_id, corr_df, threshold=0.87):
     corr_dict = get_sample_correlations(sample_id, corr_df)
     # many samples do not have correlations either in the all v all matrix or file structure
     if corr_dict is None:
@@ -88,6 +88,13 @@ def diseases_correlated_above_threshold(sample_id, corr_df, type_df, threshold=0
     for s, c in corr_dict.items():
         if c > threshold:
             sample_ids.append(s)
+    
+    return sample_ids
+
+def diseases_correlated_above_threshold(sample_id, corr_df, type_df, threshold=0.87):
+    sample_ids = get_samples_correlated_above_threshold(sample_id, corr_df, threshold)
+    if sample_ids is None:
+        return None
     
     donor_ids = [sample_to_donor(sample_id) for sample_id in sample_ids]
     disease_counts = type_df.loc[donor_ids]['Diagnosis/Disease'].value_counts()
