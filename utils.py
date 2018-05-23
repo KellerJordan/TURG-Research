@@ -91,10 +91,14 @@ def get_samples_correlated_above_threshold(sample_id, corr_df, threshold=0.87):
     
     return sample_ids
 
-def diseases_correlated_above_threshold(sample_id, corr_df, type_df, threshold=0.87):
+def diseases_correlated_above_threshold(sample_id, corr_df, type_df, threshold=0.87, same_src=False):
     sample_ids = get_samples_correlated_above_threshold(sample_id, corr_df, threshold)
     if sample_ids is None:
         return None
+    
+    if same_src:
+        source = sample_to_source(sample_id)
+        sample_ids = [s for s in sample_ids if sample_to_source(s) == source]
     
     donor_ids = [sample_to_donor(sample_id) for sample_id in sample_ids]
     disease_counts = type_df.loc[donor_ids]['Diagnosis/Disease'].value_counts()
