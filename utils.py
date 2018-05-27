@@ -24,13 +24,14 @@ def donor_to_samples(donor_id):
     return sample_ids
 
 def sample_to_donor(sample_id):
-    if sample_id[:len('TARGET')] == 'TARGET':
+    src = sample_to_source(sample_id)
+    if src == 'TARGET':
         return sample_id[:16]
-    elif sample_id[:len('TCGA')] == 'TCGA':
+    elif src == 'TCGA':
         return sample_id[:12]
-    elif sample_id[:len('THR')] == 'THR':
+    elif src == 'THR':
         return sample_id[:10]
-    elif sample_id[:len('TH')] == 'TH':
+    elif src == 'TH':
         return sample_id[:9]
     else:
         raise Exception('Unknown data source')
