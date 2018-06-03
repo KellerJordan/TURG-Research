@@ -1,5 +1,6 @@
 import os
 import sys
+import re
 import json
 import glob
 
@@ -42,6 +43,21 @@ def sample_to_source(sample_id):
             return src
     raise Exception('Unknown source for sample_id %s' % sample_id)
 
+def sample_id_info(sample_id):
+    info = {}
+    for src in sorted(SOURCES, key=lambda s: -len(s)):
+        if sample_id[:len(src)] == src:
+            info['source'] = src
+            break
+    donor_lens = {'TARGET': 16, 'TCGA': 12, 'THR': 10, 'TH': 9, 'UNK': 0}
+    info['donor'] = sample_id[donor_lens[info.get('source', 'UNK')]]
+    m = re.search(r'[0-9][0-9]', sample_id)
+    if m:
+        info['sub_source'] = sample_id[0:m.end()]
+    elif 'source' in info:
+        info['sub_source'] = info['source']
+    return info
+    
 def get_samples_by_donor_list(donor_ids):
     sample_ids = []
     missing = 0
@@ -76,7 +92,7 @@ def get_sample_correlations(sample_id, corr_df):
         if os.path.isfile(json_path):
             with open(json_path, 'r') as f:
                 corr_dict = json.loads(f.read())['correlations_vs_focus_sample']
-        
+    
     return corr_dict
 
 def get_samples_correlated_above_threshold(sample_id, corr_df, threshold=0.87):
@@ -92,14 +108,18 @@ def get_samples_correlated_above_threshold(sample_id, corr_df, threshold=0.87):
     
     return sample_ids
 
-def diseases_correlated_above_threshold(sample_id, corr_df, type_df, threshold=0.87, same_src=False):
+def diseases_correlated_above_threshold(sample_id, corr_df, type_df, threshold=0.87, same_src=True, diff_src=True):
     sample_ids = get_samples_correlated_above_threshold(sample_id, corr_df, threshold)
     if sample_ids is None:
         return None
     
+    result_sample_ids = []
+    src = sample_to_source(sample_id)
     if same_src:
-        source = sample_to_source(sample_id)
-        sample_ids = [s for s in sample_ids if sample_to_source(s) == source]
+        result_sample_ids.extend([s for s in sample_ids if sample_to_source(s) == src])
+    if diff_src:
+        result_sample_ids.extend([s for s in sample_ids if sample_to_source(s) != src])
+    sample_ids = result_sample_ids
     
     donor_ids = [sample_to_donor(sample_id) for sample_id in sample_ids]
     disease_counts = type_df.loc[donor_ids]['Diagnosis/Disease'].value_counts()
